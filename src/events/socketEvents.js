@@ -41,14 +41,26 @@ export function registerSocketEvents(io) {
     });
 
     // 統一的遊戲動作入口
-    function withGame(handler) {
+    // eventBuilder(game, slot, payload)：在動作執行「前」擷取動畫所需資訊（如卡名、算式），可為 null
+    function withGame(handler, eventBuilder) {
       return (payload = {}) => {
         const room = rm.findRoomBySocket(socket.id);
         if (!room || !room.game) return socket.emit('action_error', { error: '不在遊戲中' });
         const slot = rm.slotOf(room, socket.id);
-        const result = handler(room.game, slot, payload);
-        if (result && result.error) socket.emit('action_error', { error: result.error });
-        else if (result && result.note) socket.emit('action_note', { note: result.note });
+        const game = room.game;
+        const pre = eventBuilder ? eventBuilder(game, slot, payload) : null;
+        const hpBefore = { p1: game.players.p1.hp, p2: game.players.p2.hp };
+        const result = handler(game, slot, payload);
+        if (result && result.error) { socket.emit('action_error', { error: result.error }); broadcastState(room); return; }
+        if (result && result.note) socket.emit('action_note', { note: result.note });
+        // 廣播動作事件（含血量變化），供雙方播放動畫
+        if (pre) {
+          const event = {
+            ...pre, actor: slot, actorChar: game.players[slot].character,
+            dmg: { p1: hpBefore.p1 - game.players.p1.hp, p2: hpBefore.p2 - game.players.p2.hp },
+          };
+          for (const pl of room.players) io.to(pl.socketId).emit('action_event', { ...event, youAre: pl.slot });
+        }
         broadcastState(room);
       };
     }
@@ -65,10 +77,25 @@ export function registerSocketEvents(io) {
       });
     });
 
-    socket.on('set_defense', withGame((game, slot, p) => game.setDefense(slot, p.uids || [])));
-    socket.on('play_field', withGame((game, slot, p) => game.playField(slot, p.uid, p.param)));
-    socket.on('use_skill', withGame((game, slot, p) => game.useSkill(slot, p.uid, p.payload || {})));
-    socket.on('attack', withGame((game, slot, p) => game.attack(slot, p.uids || [])));
+    // 取手牌某 uid 的卡牌（事件建構用）
+    const cardOf = (game, slot, uid) => game.players[slot].hand.find((c) => c.uid === uid);
+
+    socket.on('set_defense', withGame(
+      (game, slot, p) => game.setDefense(slot, p.uids || []),
+      () => ({ kind: 'defense' }),
+    ));
+    socket.on('play_field', withGame(
+      (game, slot, p) => game.playField(slot, p.uid, p.param),
+      (game, slot, p) => { const c = cardOf(game, slot, p.uid); return { kind: 'field', card: c ? c.name : '場地卡' }; },
+    ));
+    socket.on('use_skill', withGame(
+      (game, slot, p) => game.useSkill(slot, p.uid, p.payload || {}),
+      (game, slot, p) => { const c = cardOf(game, slot, p.uid); return { kind: 'skill', card: c ? c.name : '技能卡', glyph: c ? c.glyph : '' }; },
+    ));
+    socket.on('attack', withGame(
+      (game, slot, p) => game.attack(slot, p.uids || []),
+      (game, slot, p) => { const cs = (p.uids || []).map((u) => cardOf(game, slot, u)).filter(Boolean); return { kind: 'attack', expr: cs.map((c) => c.glyph).join(' ') }; },
+    ));
     socket.on('end_turn', withGame((game, slot) => game.endTurn(slot)));
 
     // 算式預覽（不改變狀態）

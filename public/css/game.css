@@ -94,3 +94,47 @@ button.accent2:hover { background: #fbbf76; }
 }
 .tooltip .tt-name { font-weight: bold; color: var(--accent2); display: block; margin-bottom: 4px; }
 .tooltip .tt-meta { color: var(--muted); font-size: 0.75rem; }
+
+/* ───── 動作動畫 ───── */
+.event-overlay {
+  position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 150; text-align: center; pointer-events: none;
+  background: rgba(10, 14, 24, 0.92); border: 2px solid var(--accent);
+  border-radius: 14px; padding: 18px 36px; min-width: 240px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+.event-overlay.opp { border-color: var(--danger); }
+.event-overlay.show { animation: eventPop 1.9s ease-out forwards; }
+.event-overlay .ev-icon { font-size: 2.2rem; line-height: 1; margin-bottom: 6px; }
+.event-overlay .ev-title { font-size: 1.3rem; font-weight: bold; color: var(--accent); letter-spacing: 1px; }
+.event-overlay.opp .ev-title { color: var(--danger); }
+.event-overlay .ev-sub { margin-top: 6px; font-size: 1.05rem; color: var(--text); font-family: "Consolas", monospace; }
+@keyframes eventPop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  20%  { transform: translate(-50%, -50%) scale(1); }
+  82%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -52%) scale(0.96); }
+}
+
+/* HP 條受擊抖動 + 紅閃 */
+.hpbar.hit { animation: hpShake 0.5s ease; }
+@keyframes hpShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); box-shadow: 0 0 0 2px var(--danger) inset; }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); box-shadow: 0 0 0 2px var(--danger) inset; }
+  80% { transform: translateX(3px); }
+}
+/* 浮動傷害數字 */
+.dmg-float {
+  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+  font-size: 1.6rem; font-weight: bold; color: var(--danger);
+  text-shadow: 0 2px 6px #000; pointer-events: none; z-index: 160;
+  animation: floatUp 1.2s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { opacity: 0; top: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; top: -42px; }
+}

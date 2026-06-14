@@ -33,7 +33,7 @@
       <span class="side-badge opp-badge">對手</span>
       <div class="player-info">
         <span id="opp-name" class="pname"></span>
-        <div class="hpbar"><div id="opp-hp-fill" class="hp-fill"></div><span id="opp-hp-text" class="hp-text"></span></div>
+        <div class="hpbar" id="opp-hp-bar"><div id="opp-hp-fill" class="hp-fill"></div><span id="opp-hp-text" class="hp-text"></span></div>
       </div>
       <div class="meta-row">
         <span>數字牌庫 <b id="opp-numdeck">0</b></span>
@@ -83,7 +83,7 @@
       <span class="side-badge me-badge">我方</span>
       <div class="player-info">
         <span id="my-name" class="pname"></span>
-        <div class="hpbar"><div id="my-hp-fill" class="hp-fill"></div><span id="my-hp-text" class="hp-text"></span></div>
+        <div class="hpbar" id="my-hp-bar"><div id="my-hp-fill" class="hp-fill"></div><span id="my-hp-text" class="hp-text"></span></div>
       </div>
       <div class="meta-row">
         <span>數字牌庫 <b id="my-numdeck">0</b></span>
@@ -113,6 +113,11 @@
 
   <div id="toast" class="toast hidden"></div>
   <div id="tooltip" class="tooltip hidden"></div>
+  <div id="event-overlay" class="event-overlay hidden">
+    <div class="ev-icon" id="ev-icon"></div>
+    <div class="ev-title" id="ev-title"></div>
+    <div class="ev-sub" id="ev-sub"></div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/app.js"></script>

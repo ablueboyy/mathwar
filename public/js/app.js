@@ -125,6 +125,47 @@ socket.on('attack_preview', (r) => {
   $('preview').textContent = r.ok ? `算式結果：${r.value}` : `（${r.error}）`;
 });
 
+// ───── 動作動畫：出招/用卡瞬間雙方都看到實際發生什麼 ─────
+const EV_ICON = { attack: '⚔️', skill: '✨', field: '🌐', defense: '🛡️' };
+function showEvent(ev) {
+  const mine = ev.actor === ev.youAre;
+  const who = mine ? '你' : '對手';
+  const name = charName(ev.actorChar);
+  let title = '', sub = '';
+  if (ev.kind === 'attack') { title = `${who}（${name}）算式攻擊`; sub = ev.expr || ''; }
+  else if (ev.kind === 'skill') { title = `${who}（${name}）使用技能`; sub = ev.card || ''; }
+  else if (ev.kind === 'field') { title = `${who}（${name}）發動場地`; sub = ev.card || ''; }
+  else if (ev.kind === 'defense') { title = `${who}（${name}）佈置防禦`; sub = ''; }
+
+  const dmgToMe = ev.dmg[ev.youAre] || 0;
+  const dmgToOpp = ev.dmg[ev.youAre === 'p1' ? 'p2' : 'p1'] || 0;
+  if (ev.kind === 'attack' && dmgToMe <= 0 && dmgToOpp <= 0) sub += '（被防禦吸收）';
+
+  const ov = $('event-overlay');
+  ov.classList.toggle('opp', !mine);
+  $('ev-icon').textContent = EV_ICON[ev.kind] || '✨';
+  $('ev-title').textContent = title;
+  $('ev-sub').textContent = sub;
+  ov.classList.remove('hidden', 'show');
+  void ov.offsetWidth;        // 重啟動畫
+  ov.classList.add('show');
+  clearTimeout(showEvent._t);
+  showEvent._t = setTimeout(() => ov.classList.add('hidden'), 1900);
+
+  // 受擊：HP 條抖動 + 浮動傷害數字（HP 減少的一方）
+  if (dmgToMe > 0) hitBar('my-hp-fill', 'my-hp-bar', dmgToMe);
+  if (dmgToOpp > 0) hitBar('opp-hp-fill', 'opp-hp-bar', dmgToOpp);
+}
+function hitBar(fillId, barId, amount) {
+  const bar = document.getElementById(barId);
+  if (!bar) return;
+  bar.classList.remove('hit'); void bar.offsetWidth; bar.classList.add('hit');
+  const f = document.createElement('div'); f.className = 'dmg-float'; f.textContent = '-' + amount;
+  bar.appendChild(f);
+  setTimeout(() => f.remove(), 1300);
+}
+socket.on('action_event', showEvent);
+
 socket.on('state', (st) => {
   lastState = st;
   oppDraft = { attack: 0, defense: 0 }; // 任何正式狀態更新都清除對手佈置中的牌背
