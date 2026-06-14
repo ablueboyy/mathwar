@@ -1,0 +1,156 @@
+// 公式卡定義（54 種，含 8 張防禦相關）
+// timing: 'main'（主要階段一般公式）| 'instant'（⚡速效）| 'persistent'（🔁持續）| 'cost'（💀代價）
+// effect：對應 EffectHandler 中的處理器 id；尚未實作者其 effect 為 null（打出後僅入墓地並記錄）
+
+export const FORMULAS = [
+  // ── 代數・不等式類 ──
+  { id: 'amgm', name: 'AM-GM不等式', cat: 'algebra', timing: 'main', effect: 'amgm',
+    desc: '選 2～3 張不同數字卡，以 ⌊(AM-GM)×15⌋ 作為傷害（上限 50）。' },
+  { id: 'cauchy_schwarz', name: '柯西-施瓦茨不等式', cat: 'algebra', timing: 'instant', effect: 'cauchy_schwarz',
+    desc: '⚡待命防禦：對手下次算式攻擊傷害降為 60%（柯西-施瓦茨上界的簡化實作）。' },
+  { id: 'binomial', name: '二項式定理', cat: 'algebra', timing: 'persistent', effect: 'binomial',
+    desc: '🔁2 回合。你的算式攻擊若使用 ^（次方），傷害額外 +30（展開項加成的簡化實作）。' },
+  { id: 'vieta', name: '韋達定理', cat: 'algebra', timing: 'main', effect: 'draw_vieta',
+    desc: '宣告二次方程根之和與積，從數字牌庫抽 3 張；吻合再抽 1 張。' },
+  { id: 'bezout', name: '貝祖定理', cat: 'algebra', timing: 'main', effect: 'bezout',
+    desc: '取數字墓地兩卡 gcd×15 作為傷害（無視傷害上限，受防禦值影響）。' },
+  { id: 'fermat_little', name: '費馬小定理', cat: 'algebra', timing: 'cost', effect: 'fermat_little',
+    desc: '💀棄 2 張手牌。選質數 p 與一張數字卡 a，計算 a^p mod p，×15 作為傷害。' },
+  { id: 'crt', name: '中國剩餘定理', cat: 'algebra', timing: 'instant', effect: 'crt',
+    desc: '⚡待命：對手下次算式攻擊傷害改為分別對 2、3、5 取模後相加。' },
+  { id: 'pigeonhole', name: '鴿巢原理', cat: 'algebra', timing: 'main', effect: 'pigeonhole',
+    desc: '對手手牌 >8 時，強制其每種重複數字卡各棄一張。你抽 1 張技能。' },
+  { id: 'lagrange_interp', name: '拉格朗日插值', cat: 'algebra', timing: 'main', effect: null,
+    desc: '取數字墓地至多 3 卡作節點，計算 x=0 插值結果作為傷害（上限 100）。' },
+  { id: 'permcomb', name: '排列組合定理', cat: 'algebra', timing: 'main', effect: 'permcomb',
+    desc: '宣告 n、k，計算 C(n,k) 作為傷害（上限 100）。' },
+
+  // ── 數論類 ──
+  { id: 'euler_theorem', name: '歐拉定理', cat: 'numtheory', timing: 'persistent', effect: 'euler_theorem',
+    desc: '🔁2 回合。你的算式傷害無視對手防禦區（穿透防禦值），且不被防禦技能減少。' },
+  { id: 'fermat_last', name: '費馬最後定理', cat: 'numtheory', timing: 'instant', effect: 'fermat_last',
+    desc: '⚡待命：對手下次算式攻擊若使用 ^（次方）則取消其攻擊，並反擊 50 點。' },
+  { id: 'riemann_hypothesis', name: '黎曼假設', cat: 'numtheory', timing: 'instant', effect: null,
+    desc: '⚡對手傷害為奇數時 -25（50% 成功；黎曼必成）。每場限 1 次。' },
+  { id: 'goldbach', name: '哥德巴赫猜想', cat: 'numtheory', timing: 'main', effect: 'goldbach',
+    desc: '造成 50 點穿透傷害，焚燒對手數字牌庫頂 5 張；對手 HP 為偶數再焚 5 張。' },
+  { id: 'prime_theorem', name: '質數定理', cat: 'numtheory', timing: 'main', effect: 'prime_theorem',
+    desc: '全場啟動一次：之後每回合抽到 2/3/5/7，額外抽 1 張數字卡。' },
+  { id: 'perfect_number', name: '完全數定理', cat: 'numtheory', timing: 'persistent', effect: 'perfect_number',
+    desc: '本回合算式結果為 6/28/496 時，傷害 +50 且對手跳過下回合戰鬥。' },
+
+  // ── 分析學・微積分類 ──
+  { id: 'ftc', name: '積分基本定理', cat: 'analysis', timing: 'persistent', effect: 'ftc',
+    desc: '🔁本回合你的攻擊傷害 +40（先積分再微分恆等的加成）。' },
+  { id: 'rolle', name: '羅爾定理', cat: 'analysis', timing: 'main', effect: 'rolle',
+    desc: '若你下次攻擊傷害與對手上回合傷害相等，立即可再進行一次戰鬥。' },
+  { id: 'mvt', name: '均值定理', cat: 'analysis', timing: 'main', effect: 'mvt',
+    desc: '以過去 3 回合傷害平均作為本回合傷害（不足 3 回合則為 30）。' },
+  { id: 'taylor', name: '泰勒展開式', cat: 'analysis', timing: 'cost', effect: 'taylor',
+    desc: '💀棄手牌中所有符號卡。本次造成傷害 = 所棄符號卡張數 × 20。' },
+  { id: 'ivt', name: '中間值定理', cat: 'analysis', timing: 'main', effect: 'ivt',
+    desc: '在你歷史傷害 min~max 間宣告任意整數作為傷害（需 ≥2 次記錄）。' },
+  { id: 'limit_def', name: '極限定義', cat: 'analysis', timing: 'persistent', effect: 'limit_def',
+    desc: '本回合你的算式攻擊傷害上限提升至 150。' },
+  { id: 'lhopital', name: '洛必達法則', cat: 'analysis', timing: 'instant', effect: 'lhopital',
+    desc: '⚡本回合你的算式若因除以 0／不定式而無效，改以 50 點傷害結算。' },
+  { id: 'fourier', name: '傅立葉變換', cat: 'analysis', timing: 'persistent', effect: null,
+    desc: '🔁2 回合。算式可同時用多個 sin/cos，各頻率累加（上限 100）。' },
+  { id: 'laplace', name: '拉普拉斯變換', cat: 'analysis', timing: 'main', effect: null,
+    desc: '本回合 d/dx 傷害 +30，從技能墓地回收 1 張 ∫ 或 d/dx。' },
+
+  // ── 線性代數類 ──
+  { id: 'determinant', name: '行列式定理', cat: 'linalg', timing: 'main', effect: null,
+    desc: '取手牌 2 卡(a,b)與墓地 2 卡(c,d)，|ad-bc| 作為傷害（上限 100）。' },
+  { id: 'cramer', name: '克拉瑪公式', cat: 'linalg', timing: 'cost', effect: null,
+    desc: '💀棄 3 張手牌。從技能牌庫搜尋任意 3 張加入手牌。' },
+  { id: 'eigenvalue', name: '特徵值定理', cat: 'linalg', timing: 'persistent', effect: null,
+    desc: '🔁下一次算式傷害 +25；含 ^ 則 +40。' },
+  { id: 'rank_nullity', name: '秩-零化度定理', cat: 'linalg', timing: 'main', effect: null,
+    desc: '查看技能牌庫頂 5 張，任意張入墓地，其餘洗回。' },
+
+  // ── 幾何・拓撲類 ──
+  { id: 'pythagoras', name: '畢達哥拉斯定理', cat: 'geometry', timing: 'main', effect: 'pythagoras',
+    desc: '選手牌 2 張數字卡，⌊√(a²+b²)⌋×5 作為傷害（上限 100），抽 1 張數字。非歐空間下失效。' },
+  { id: 'law_sines', name: '正弦定理', cat: 'geometry', timing: 'main', effect: 'law_sines',
+    desc: '選兩張角度卡(A、B)與一張數字卡(邊長 a)，b=⌊a·sinB/sinA·5⌋ 作為傷害（上限 100）。' },
+  { id: 'law_cosines', name: '餘弦定理', cat: 'geometry', timing: 'main', effect: 'law_cosines',
+    desc: '選 2 張數字卡與一張角度卡(C)，⌊√(a²+b²-2ab·cosC)·5⌋ 作為傷害（上限 100）。' },
+  { id: 'euler_polyhedron', name: '歐拉多面體公式', cat: 'geometry', timing: 'main', effect: 'euler_polyhedron',
+    desc: '選 3 張數字卡 V,E,F；若 V-E+F=2 造成 (V+E+F)×5 傷害並抽 1 張，否則扣自身 25HP。' },
+  { id: 'four_color', name: '四色定理', cat: 'geometry', timing: 'persistent', effect: 'four_color',
+    desc: '🔁4 回合。你的傷害依序 +5/+10/+15/+20。' },
+  { id: 'poincare_conj', name: '龐加萊猜想', cat: 'geometry', timing: 'cost', effect: null,
+    desc: '💀扣自身 75HP，需前 3 回合皆造成過傷害。本回合傷害為穿透傷害。' },
+  { id: 'mobius', name: '莫比烏斯帶', cat: 'geometry', timing: 'instant', effect: null,
+    desc: '⚡對手打出場地卡時反轉其效果。持續 1 回合。' },
+
+  // ── 機率・統計類 ──
+  { id: 'bayes', name: '貝氏定理', cat: 'probability', timing: 'instant', effect: null,
+    desc: '⚡對手宣告公式卡時抽 1 張；若為公式卡可取消對手公式卡效果。' },
+  { id: 'clt', name: '中央極限定理', cat: 'probability', timing: 'persistent', effect: 'clt',
+    desc: '🔁啟動後，當你最近 3 次傷害標準差 <25（穩定輸出）時，攻擊傷害 +30。' },
+  { id: 'lln', name: '大數法則', cat: 'probability', timing: 'main', effect: 'lln',
+    desc: '以所有歷史回合傷害平均作為本回合傷害（需 ≥4 回合記錄）。' },
+  { id: 'birthday', name: '生日悖論', cat: 'probability', timing: 'main', effect: null,
+    desc: '對手手牌有兩張同值數字卡則強制棄一張，你抽 1 張技能。' },
+  { id: 'monty_hall', name: '蒙提霍爾問題', cat: 'probability', timing: 'main', effect: null,
+    desc: '對手取數字牌庫頂 3 張，你選 1 張，其餘送回牌庫底。' },
+
+  // ── 複數・抽象代數類 ──
+  { id: 'euler_formula', name: '歐拉公式', cat: 'complex', timing: 'main', effect: null,
+    desc: '複數平面下免費；否則扣 25HP。打出 e、i、π 各一，造成 100 點穿透傷害。' },
+  { id: 'de_moivre', name: '棣美弗定理', cat: 'complex', timing: 'main', effect: null,
+    desc: '複數場地下，三角函數傷害額外 +n×8（n 為本回合 ^ 指數，上限 +40）。' },
+  { id: 'group_theory', name: '群論基本定理', cat: 'complex', timing: 'main', effect: null,
+    desc: '宣告 n；傷害可整除 n 則 +n×4，否則向下調整為最近 n 的倍數。' },
+  { id: 'galois', name: '伽羅瓦理論', cat: 'complex', timing: 'cost', effect: null,
+    desc: '💀棄所有手牌。從技能牌庫任抽 6 張加入手牌。' },
+
+  // ── 物理・應用數學類 ──
+  { id: 'schrodinger', name: '薛丁格方程式', cat: 'physics', timing: 'instant', effect: null,
+    desc: '⚡傷害計算後 50% 生效/歸零。雙方各限 1 次。' },
+  { id: 'gravitation', name: '萬有引力定律', cat: 'physics', timing: 'main', effect: 'gravitation',
+    desc: '⌊(對手HP×你HP)÷1000⌋ 作為傷害（上限 80）。' },
+  { id: 'thermo2', name: '熱力學第二定律', cat: 'physics', timing: 'persistent', effect: null,
+    desc: '🔁每用 1 張公式卡熵 +1，達 6 時焚燒對手數字牌庫頂 10 張並歸零。' },
+  { id: 'chaos', name: '混沌理論', cat: 'physics', timing: 'cost', effect: null,
+    desc: '💀扣自身 5HP。數字牌庫隨機取 3 張選 1 使用(傷害 +25)，其餘棄置。' },
+  { id: 'game_theory', name: '賽局理論', cat: 'physics', timing: 'main', effect: null,
+    desc: '雙方各秘選一數字卡同開；較大方造成(差值)×5，較小方抽 2 張。' },
+
+  // ── 離散數學類 ──
+  { id: 'fibonacci', name: '費波那契數列', cat: 'discrete', timing: 'persistent', effect: null,
+    desc: '🔁3 回合。傷害依序 +5/+5/+10。' },
+  { id: 'handshake', name: '圖論握手定理', cat: 'discrete', timing: 'main', effect: null,
+    desc: '選偶數張牌，每兩張選 1 張加入本回合算式（不佔槽位）。' },
+  { id: 'tsp', name: '旅行商問題', cat: 'discrete', timing: 'cost', effect: null,
+    desc: '💀系統於數字墓地生成路徑；改善則 ÷2 作為傷害，逾時 ÷3（上限 100）。' },
+  { id: 'basel', name: '巴塞爾問題', cat: 'discrete', timing: 'main', effect: 'basel',
+    desc: '造成固定 50 點傷害，從技能牌庫抽 1 張。' },
+  { id: 'cantor', name: '康托爾對角論證', cat: 'discrete', timing: 'instant', effect: null,
+    desc: '⚡對手使用抽牌效果時取消其抽牌，你改抽 2 張技能。' },
+
+  // ── 防禦干擾類 ──
+  { id: 'def_deconstruct', name: '算式解構', cat: 'def-disrupt', timing: 'instant', effect: 'def_deconstruct',
+    desc: '⚡移除對手防禦區至多 2 張牌（送入對應墓地）。' },
+  { id: 'def_collapse', name: '防線崩潰', cat: 'def-disrupt', timing: 'cost', effect: 'def_collapse',
+    desc: '💀棄 1 張手牌。清空對手防禦區所有牌。' },
+  { id: 'def_pollute', name: '符號污染', cat: 'def-disrupt', timing: 'persistent', effect: 'def_pollute',
+    desc: '🔁1 回合。對手防禦區所有算符強制改為加法後重算防禦值。' },
+  { id: 'def_tamper', name: '數值篡改', cat: 'def-disrupt', timing: 'main', effect: 'def_tamper',
+    desc: '將對手防禦區一張數字卡數值改為 1，直到其下次修改防禦區。你抽 1 張數字。' },
+  { id: 'def_jam', name: '防禦干擾', cat: 'def-disrupt', timing: 'instant', effect: 'def_jam',
+    desc: '⚡本回合對手防禦值上限降為 50。' },
+
+  // ── 防禦強化類 ──
+  { id: 'def_amplify', name: '防禦增幅', cat: 'def-boost', timing: 'persistent', effect: 'def_amplify',
+    desc: '🔁2 回合。你的防禦值上限提升至 150。' },
+  { id: 'def_fortify', name: '堅固算式', cat: 'def-boost', timing: 'persistent', effect: 'def_fortify',
+    desc: '🔁2 回合。對手無法以技能卡移除你防禦區的牌。' },
+  { id: 'def_counter', name: '防守反擊', cat: 'def-boost', timing: 'instant', effect: 'def_counter',
+    desc: '⚡對手算式傷害被你防禦值完全吸收時，造成 20 點穿透反擊。' },
+];
+
+export const FORMULA_BY_ID = Object.fromEntries(FORMULAS.map((f) => [f.id, f]));
+export const FORMULA_BY_NAME = Object.fromEntries(FORMULAS.map((f) => [f.name, f.id]));

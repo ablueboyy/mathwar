@@ -1,0 +1,14 @@
+# Render.com Blueprint：連結 GitHub repo 後即可一鍵部署
+# 參考 online_game_plan.md 的部署規劃（免費常駐 Web Service）
+services:
+  - type: web
+    name: mathwar
+    env: node
+    region: singapore        # 離台灣最近的免費區域
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true         # push 到 main 後自動重新部署
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

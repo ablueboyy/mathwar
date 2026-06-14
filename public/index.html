@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MathWar 數學戰爭</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/game.css" />
+</head>
+<body>
+  <!-- ───── 大廳 ───── -->
+  <section id="lobby" class="screen">
+    <h1>MathWar <span class="sub">數學戰爭 v5.0</span></h1>
+    <p class="tagline">選擇數學家，輸入房間號碼，與對手構築算式對戰。</p>
+
+    <h2>① 選擇你的數學家</h2>
+    <div id="character-grid" class="character-grid"></div>
+
+    <h2>② 建立或加入房間</h2>
+    <div class="room-controls">
+      <button id="btn-create" class="primary">建立新房間</button>
+      <span class="or">或</span>
+      <input id="room-input" maxlength="4" placeholder="房間號碼" autocomplete="off" />
+      <button id="btn-join">加入房間</button>
+    </div>
+    <p id="lobby-status" class="status"></p>
+  </section>
+
+  <!-- ───── 對戰盤面 ───── -->
+  <section id="game" class="screen hidden">
+    <!-- 對手資訊 -->
+    <div class="player-panel opponent">
+      <span class="side-badge opp-badge">對手</span>
+      <div class="player-info">
+        <span id="opp-name" class="pname"></span>
+        <div class="hpbar"><div id="opp-hp-fill" class="hp-fill"></div><span id="opp-hp-text" class="hp-text"></span></div>
+      </div>
+      <div class="meta-row">
+        <span>數字牌庫 <b id="opp-numdeck">0</b></span>
+        <span>技能牌庫 <b id="opp-skilldeck">0</b></span>
+        <span>數字墓地 <b id="opp-numgrave">0</b></span>
+        <span>技能墓地 <b id="opp-skillgrave">0</b></span>
+        <span>手牌 <b id="opp-hand">0</b></span>
+      </div>
+    </div>
+
+    <!-- 對手防禦區 -->
+    <div class="defense-zone opp-zone">
+      <span class="zone-label">🔴 對手防禦區</span>
+      <div id="opp-defense" class="card-row"></div>
+      <span class="def-value">🛡️ <b id="opp-defval">0</b></span>
+    </div>
+
+    <!-- 中央：場地 + 算式工作區 -->
+    <div class="center-zone">
+      <div class="field-bar" id="field-bar">
+        <span id="field-text">場地：無</span>
+        <span id="turn-text" class="turn-text"></span>
+      </div>
+      <div class="work-zone">
+        <div class="work-header">
+          <span class="work-title" id="work-title">⚔️ 算式區（點擊或拖曳手牌至此）</span>
+          <span id="preview" class="preview"></span>
+        </div>
+        <div id="selection-row" class="card-row selection drop-target"></div>
+        <div class="work-buttons">
+          <button id="btn-calc" class="primary">計算！攻擊</button>
+          <button id="btn-set-def" class="accent2">設為防禦</button>
+          <button id="btn-clear">清空選擇</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 我方防禦區（拖曳目標）-->
+    <div class="defense-zone my-zone drop-target" id="my-defense-drop">
+      <span class="zone-label">🟢 我方防禦區（拖曳手牌至此設防）</span>
+      <div id="my-defense" class="card-row"></div>
+      <span class="def-value">🛡️ <b id="my-defval">0</b></span>
+    </div>
+
+    <!-- 我方資訊 -->
+    <div class="player-panel me">
+      <span class="side-badge me-badge">我方</span>
+      <div class="player-info">
+        <span id="my-name" class="pname"></span>
+        <div class="hpbar"><div id="my-hp-fill" class="hp-fill"></div><span id="my-hp-text" class="hp-text"></span></div>
+      </div>
+      <div class="meta-row">
+        <span>數字牌庫 <b id="my-numdeck">0</b></span>
+        <span>技能牌庫 <b id="my-skilldeck">0</b></span>
+        <span>數字墓地 <b id="my-numgrave">0</b></span>
+        <span>技能墓地 <b id="my-skillgrave">0</b></span>
+      </div>
+    </div>
+
+    <!-- 手牌 -->
+    <div class="hand-zone">
+      <span class="zone-label">我方手牌（數字/符號卡：點擊或拖曳加入算式；公式/簽名/場地卡：點擊發動）</span>
+      <div id="my-hand" class="card-row hand"></div>
+    </div>
+
+    <!-- 控制 -->
+    <div class="controls">
+      <button id="btn-endturn">結束回合</button>
+    </div>
+
+    <!-- 記錄 -->
+    <div class="log-zone">
+      <span class="zone-label">行動記錄</span>
+      <div id="log" class="log"></div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+  <div id="tooltip" class="tooltip hidden"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

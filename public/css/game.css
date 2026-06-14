@@ -1,0 +1,96 @@
+/* 對戰盤面 */
+#game { max-width: 1000px; }
+
+/* 玩家面板：敵我以背景色 + 邊框 + 徽章明確區分 */
+.player-panel { position: relative; border-radius: 10px; padding: 10px 16px; margin-bottom: 8px; }
+.player-panel.opponent { background: linear-gradient(90deg, #3a1620, #241019); border: 2px solid var(--danger); }
+.player-panel.me { background: linear-gradient(90deg, #143020, #0f2418); border: 2px solid var(--accent); }
+
+.side-badge {
+  display: inline-block; font-weight: bold; font-size: 0.85rem; letter-spacing: 3px;
+  padding: 3px 12px; border-radius: 6px; margin-bottom: 8px;
+}
+.opp-badge { background: var(--danger); color: #2d0b0b; }
+.me-badge { background: var(--accent); color: #06211f; }
+
+.player-info { display: flex; align-items: center; gap: 16px; }
+.pname { font-size: 1.2rem; font-weight: bold; min-width: 120px; }
+
+.hpbar { position: relative; flex: 1; height: 22px; background: #0c1018; border-radius: 11px; overflow: hidden; border: 1px solid var(--line); }
+.hp-fill { height: 100%; background: linear-gradient(90deg, #48bb78, #4fd1c5); transition: width 0.4s; }
+.opponent .hp-fill { background: linear-gradient(90deg, #fc8181, #f6ad55); }
+.hp-text { position: absolute; inset: 0; text-align: center; line-height: 22px; font-size: 0.85rem; font-weight: bold; text-shadow: 0 1px 2px #000; }
+
+.meta-row { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+.meta-row b { color: var(--text); }
+
+/* 防禦區：對手紅調、我方綠調 */
+.defense-zone { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; }
+.defense-zone.opp-zone { background: #1f0e14; border: 1px dashed #7a3340; }
+.defense-zone.my-zone { background: #0e1f15; border: 1px dashed #2f7a52; }
+.zone-label { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+.def-value { margin-left: auto; font-size: 0.95rem; }
+.def-value b { color: var(--accent2); font-size: 1.15rem; }
+
+/* 中央區：場地 + 算式工作區，置於雙方防禦區之間 */
+.center-zone { margin: 4px 0 8px; }
+.field-bar { text-align: center; padding: 8px; background: var(--panel2); border-radius: 8px 8px 0 0; position: relative; cursor: help; border: 1px solid var(--line); border-bottom: none; }
+.turn-text { position: absolute; right: 16px; top: 8px; color: var(--accent); font-weight: bold; }
+
+.work-zone { background: var(--panel); border: 2px solid var(--accent2); border-radius: 0 0 10px 10px; padding: 12px; }
+.work-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.work-title { font-weight: bold; color: var(--accent2); }
+.preview { color: var(--accent); font-weight: bold; font-size: 1.05rem; }
+.selection { background: #0d111c; border-radius: 8px; padding: 8px; border: 2px dashed var(--line); min-height: 72px; }
+.work-buttons { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+button.accent2 { background: var(--accent2); color: #2d1a06; font-weight: bold; border: none; }
+button.accent2:hover { background: #fbbf76; }
+
+/* 拖曳目標高亮 */
+.drop-target.drag-over { outline: 3px solid var(--accent); outline-offset: 2px; background: #16263a; }
+
+/* 卡牌 */
+.card-row { display: flex; gap: 6px; flex-wrap: wrap; min-height: 56px; align-items: center; }
+.card {
+  min-width: 46px; height: 64px; border-radius: 8px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; cursor: pointer; user-select: none;
+  border: 1px solid var(--line); padding: 4px 6px; transition: transform 0.1s; position: relative;
+}
+.card:hover { transform: translateY(-3px); }
+.card.dragging { opacity: 0.4; }
+.card .glyph { font-size: 1.2rem; font-weight: bold; line-height: 1.1; }
+.card .label { font-size: 0.6rem; color: var(--muted); margin-top: 2px; text-align: center; max-width: 70px; }
+.card.number { background: #1e3a5f; }
+.card.angle { background: #3a2f5f; }
+.card.symbol { background: #2d4a2e; }
+.card.formula { background: #5a3a1e; }
+.card.field { background: #4a1e4a; }
+.card.signature { background: #5f1e2e; border-color: var(--accent2); }
+.card.selected { outline: 2px solid var(--accent2); transform: translateY(-6px); }
+.card.back {
+  background: repeating-linear-gradient(45deg, #3a2030, #3a2030 6px, #2a1622 6px, #2a1622 12px);
+  border-color: #7a3340; cursor: help;
+}
+.card.back .glyph { color: #c98; }
+.card.back .label { color: #a76; }
+
+.hand-zone { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+.controls { display: flex; gap: 8px; margin-bottom: 8px; }
+#btn-endturn { background: #4a5568; }
+
+.log-zone { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.log { max-height: 130px; overflow-y: auto; font-size: 0.82rem; color: var(--muted); display: flex; flex-direction: column-reverse; }
+.log div { padding: 2px 0; border-bottom: 1px solid #1c2336; }
+
+.not-your-turn .work-zone { opacity: 0.55; }
+.not-your-turn #btn-endturn { opacity: 0.4; pointer-events: none; }
+
+/* tooltip：滑鼠懸停卡牌 / 場地時顯示說明 */
+.tooltip {
+  position: fixed; z-index: 200; max-width: 260px; pointer-events: none;
+  background: #0b0f18; border: 1px solid var(--accent); border-radius: 8px;
+  padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); font-size: 0.85rem; line-height: 1.5;
+}
+.tooltip .tt-name { font-weight: bold; color: var(--accent2); display: block; margin-bottom: 4px; }
+.tooltip .tt-meta { color: var(--muted); font-size: 0.75rem; }

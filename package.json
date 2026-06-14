@@ -1,0 +1,22 @@
+{
+  "name": "mathwar",
+  "version": "0.1.0",
+  "description": "MathWar 數學戰爭 — 線上雙人數學卡牌對戰",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mathjs": "^13.0.0",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}
