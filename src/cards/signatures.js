@@ -30,8 +30,8 @@ export const SIGNATURES = [
     desc: '選數字卡 n；偶數造成 n×8，奇數造成 n×5 並抽 2 張技能。' },
   { id: 'sig_euler_identity', owner: 'euler', name: '歐拉恆等式特攻', timing: 'main', effect: 'sig_euler_identity',
     desc: '打出 e、i、π 各一，造成 100 穿透傷害；使用後可再戰鬥一次。' },
-  { id: 'sig_euler_tour', owner: 'euler', name: '遍歷引理', timing: 'cost',
-    desc: '💀棄 2 張手牌。從技能牌庫搜尋 3 張入手並抽 2 張數字；公式使用上限 +1。' },
+  { id: 'sig_euler_tour', owner: 'euler', name: '遍歷引理', timing: 'cost', effect: 'sig_euler_tour',
+    desc: '💀棄 2 張手牌。自技能牌庫頂取 3 張入手並抽 2 張數字；本回合公式使用上限 +1。' },
 
   // ⑤ 高斯
   { id: 'sig_gauss_sum', owner: 'gauss', name: '高斯求和公式', timing: 'main', effect: 'sig_gauss_sum',
@@ -60,8 +60,8 @@ export const SIGNATURES = [
   // ⑧ 希爾伯特
   { id: 'sig_hilbert_hotel', owner: 'hilbert', name: '希爾伯特旅館', timing: 'main', effect: 'sig_hilbert_hotel',
     desc: '對手棄最高值數字卡並焚燒數字牌庫頂 8 張，清除其防禦區最高數字卡，你抽 1 張。' },
-  { id: 'sig_consistency', owner: 'hilbert', name: '無矛盾性', timing: 'main',
-    desc: '宣告算式無矛盾；對手異議則驗算(對 +50/錯 -75HP)，不異議則 +30 並焚燒對手 8 張。' },
+  { id: 'sig_consistency', owner: 'hilbert', name: '無矛盾性', timing: 'main', effect: 'sig_consistency',
+    desc: '本回合你的下次算式攻擊 +30，並立即焚燒對手技能牌庫頂 8 張（無異議分支的簡化實作）。' },
   { id: 'sig_23_problems', owner: 'hilbert', name: '23問', timing: 'cost', effect: 'sig_23_problems',
     desc: '💀棄 1 張手牌。宣告 N(1~23) 造成 N×4 傷害並觸發對應附加效果。' },
 ];

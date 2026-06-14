@@ -60,6 +60,14 @@ export class GameState {
       this.declareWinner(this.opponentOf(slot), '對手牌庫耗盡');
       return [];
     }
+    // 康托爾對角論證：對手待命中 → 取消本次抽牌，改由對手抽 2 張技能
+    const opp = this.opponentOf(slot);
+    if (this.players[opp].flags.cantorArmed) {
+      this.players[opp].flags.cantorArmed = false;
+      this.drawSkills(opp, 2);
+      this.addLog(`${opp} 康托爾對角論證：取消 ${slot} 本回合抽牌，改抽 2 張技能`);
+      return [];
+    }
     const drawn = [];
     for (let i = 0; i < nNum && p.numberDeck.length; i++) { const c = p.numberDeck.pop(); p.hand.push(c); drawn.push(c); }
     // 質數定理：本批抽到的 2/3/5/7 各額外抽 1 張數字卡（單次，不連鎖）

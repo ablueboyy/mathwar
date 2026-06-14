@@ -170,4 +170,4 @@ export const CHARACTERS = {
 export const CHARACTER_LIST = Object.values(CHARACTERS);
 
 // 已完整實作功能卡、可實際對戰的角色；其餘角色保留設計但「尚未開放」
-export const READY_CHARACTERS = new Set(['euclid', 'archimedes', 'newton', 'gauss']);
+export const READY_CHARACTERS = new Set(['euclid', 'archimedes', 'newton', 'gauss', 'euler', 'hilbert']);

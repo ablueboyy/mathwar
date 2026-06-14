@@ -311,7 +311,7 @@ function onHandCardClick(card) {
 /* ───── 技能發動流程 ───── */
 const NEEDS_SELECTION = new Set([
   'sig_euclidean_algo', 'sig_spiral', 'sig_fluxion', 'sig_konigsberg', 'sig_gauss_sum', 'sig_gauss_integer', 'sig_riemann_integral',
-  'pythagoras', 'law_cosines', 'law_sines', 'euler_polyhedron', 'amgm',
+  'pythagoras', 'law_cosines', 'law_sines', 'euler_polyhedron', 'amgm', 'handshake',
 ]);
 function useSkillFlow(card) {
   if (!isMyTurn()) return toast('尚未輪到你，僅能查看卡片效果');
@@ -345,6 +345,22 @@ function useSkillFlow(card) {
     const idxs = raw.split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => !isNaN(n) && grave[n]);
     if (idxs.length < 2) return toast('需選兩張');
     payload = { graveUids: idxs.slice(0, 2).map((i) => grave[i].uid) };
+  } else if (cid === 'determinant') {
+    if (attackSel.length < 2) return toast('請先在手牌點選 2 張數字卡 (a,b)');
+    const grave = lastState.you.numberGrave;
+    if (grave.length < 2) return toast('你的數字墓地不足兩張');
+    const list = grave.map((c, i) => `${i}: ${c.glyph}`).join('\n');
+    const raw = prompt('輸入數字墓地 2 張編號 (c,d，逗號分隔)：\n' + list, '0,1');
+    if (raw == null) return;
+    const idxs = raw.split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => !isNaN(n) && grave[n]);
+    if (idxs.length < 2) return toast('需選兩張墓地卡');
+    payload = { uids: attackSel.slice(0, 2), graveUids: idxs.slice(0, 2).map((i) => grave[i].uid) };
+  } else if (cid === 'cramer') {
+    if (attackSel.length < 3) return toast('請先在手牌點選 3 張要棄置的卡（代價）');
+    payload = { discardUids: attackSel.slice(0, 3) };
+  } else if (cid === 'sig_euler_tour') {
+    if (attackSel.length < 2) return toast('請先在手牌點選 2 張要棄置的卡（代價）');
+    payload = { discardUids: attackSel.slice(0, 2) };
   } else if (cid === 'fermat_little') {
     if (attackSel.length < 1) return toast('請先在手牌點選 1 張數字卡 a');
     const pp = parseInt(prompt('選擇質數 p（2、3、5、7）：', '3'), 10);

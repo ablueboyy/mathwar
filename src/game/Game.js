@@ -33,10 +33,15 @@ export class Game extends GameState {
   applyAttackModifiers(slot, raw, ctx = {}) {
     const p = this.players[slot];
     let bonus = 0, cap = 100;
+    const matrixField = this.field && this.field.cardId === 'matrix_space';
     if (p.flags.fourColor) bonus += [5, 10, 15, 20][Math.min(p.flags.fourColor.step, 3)];
-    if (p.flags.eigenvalue) bonus += ctx.usedPow ? 40 : 25;
+    if (p.flags.eigenvalue) bonus += ctx.usedPow ? (matrixField ? 55 : 40) : (matrixField ? 40 : 25);
     if (p.flags.ftcBonus) bonus += 40;
     if (p.flags.binomial && ctx.usedPow) bonus += 30;
+    if (p.flags.fourier && ctx.usedTrig) bonus += 20;
+    if (p.flags.deMoivre && ctx.usedTrig && this.field && this.field.cardId === 'complex_plane') bonus += 32;
+    if (p.flags.fibonacci) bonus += (this.field && this.field.cardId === 'golden_ratio' ? [5, 10, 15] : [5, 5, 10])[Math.min(p.flags.fibonacci.step, 2)];
+    if (p.flags.consistencyBonus) bonus += 30;
     if (p.flags.clt && this._cltStable(slot)) bonus += 30;
     if (p.flags.limitDef) cap = Math.max(cap, 150);
     if (p.flags.principia) cap = Math.max(cap, 150);
@@ -143,6 +148,7 @@ export class Game extends GameState {
     const p = this.players[slot];
     delete p.flags.limitDef; delete p.flags.ftcBonus; delete p.flags.lhopital; delete p.flags.rolleArmed;
     delete p.flags.prism; delete p.flags.principia; delete p.flags.perfectNumber;
+    delete p.flags.deMoivre; delete p.flags.consistencyBonus;
 
     // 持續效果倒數
     if (p.flags.amplifyTurns > 0) { p.flags.amplifyTurns--; if (p.flags.amplifyTurns === 0) { p.defense.maxValue = p.defense.baseMax; this.recomputeDefense(slot); } }
@@ -151,6 +157,8 @@ export class Game extends GameState {
     if (p.flags.fourColor && !isFirst) { p.flags.fourColor.turnsLeft--; p.flags.fourColor.step++; if (p.flags.fourColor.turnsLeft <= 0) delete p.flags.fourColor; }
     if (p.flags.binomial > 0) { p.flags.binomial--; }
     if (p.flags.eulerTheorem > 0) { p.flags.eulerTheorem--; }
+    if (p.flags.fourier > 0) { p.flags.fourier--; }
+    if (p.flags.fibonacci && !isFirst) { p.flags.fibonacci.turnsLeft--; p.flags.fibonacci.step++; if (p.flags.fibonacci.turnsLeft <= 0) delete p.flags.fibonacci; }
 
     // 場地被動：非歐幾里得空間 → 每回合開始抽 1 張技能
     if (this.field && this.field.cardId === 'non_euclidean' && !isFirst) this.drawSkills(slot, 1);
@@ -217,10 +225,12 @@ export class Game extends GameState {
     // 消耗算式卡牌入墓地
     this.consumeCards(slot, uids);
     const usedPow = cards.some((c) => c.cardId === 'pow');
+    const TRIG = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc']);
+    const usedTrig = cards.some((c) => TRIG.has(c.cardId));
     const opts = { isAttack: true, usedPow };
     if (p.flags.eulerTheorem) { opts.ignoreDefense = true; opts.ignoreReactions = true; }
     if (p.flags.principia) { opts.ignoreDefense = true; }
-    const res = this.dealModified(slot, value, { usedPow, isExpression: true }, opts);
+    const res = this.dealModified(slot, value, { usedPow, usedTrig, isExpression: true }, opts);
     this.battledThisTurn = true;
     this.addLog(`${slot} 算式攻擊：算式傷害 ${res.capped}，對手防禦吸收 ${res.defenseAbsorbed}，實際傷害 ${res.actualDamage}` + (notes.length ? `（${notes.join('、')}）` : ''));
 
@@ -291,8 +301,9 @@ export class Game extends GameState {
     this.takeFromHand(slot, uid); this.toGrave(slot, card);
     const r = runEffect(meta.effect, this, slot, payload);
     if (!r.ok) {
-      // 執行失敗：把卡退回手牌
-      const back = p.skillGrave.pop(); if (back) p.hand.push(back);
+      // 執行失敗：依 uid 精準把該技能卡退回手牌（不依賴墓地堆疊順序）
+      const idx = p.skillGrave.findIndex((c) => c.uid === card.uid);
+      if (idx !== -1) p.hand.push(p.skillGrave.splice(idx, 1)[0]);
       return r;
     }
     if (!isInstant) this.formulaUsedThisTurn++;

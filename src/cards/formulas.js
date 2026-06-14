@@ -54,20 +54,20 @@ export const FORMULAS = [
     desc: '本回合你的算式攻擊傷害上限提升至 150。' },
   { id: 'lhopital', name: '洛必達法則', cat: 'analysis', timing: 'instant', effect: 'lhopital',
     desc: '⚡本回合你的算式若因除以 0／不定式而無效，改以 50 點傷害結算。' },
-  { id: 'fourier', name: '傅立葉變換', cat: 'analysis', timing: 'persistent', effect: null,
-    desc: '🔁2 回合。算式可同時用多個 sin/cos，各頻率累加（上限 100）。' },
+  { id: 'fourier', name: '傅立葉變換', cat: 'analysis', timing: 'persistent', effect: 'fourier',
+    desc: '🔁2 回合。你含 sin/cos 的算式攻擊傷害 +20（各頻率累加的簡化實作）。' },
   { id: 'laplace', name: '拉普拉斯變換', cat: 'analysis', timing: 'main', effect: null,
     desc: '本回合 d/dx 傷害 +30，從技能墓地回收 1 張 ∫ 或 d/dx。' },
 
   // ── 線性代數類 ──
-  { id: 'determinant', name: '行列式定理', cat: 'linalg', timing: 'main', effect: null,
-    desc: '取手牌 2 卡(a,b)與墓地 2 卡(c,d)，|ad-bc| 作為傷害（上限 100）。' },
-  { id: 'cramer', name: '克拉瑪公式', cat: 'linalg', timing: 'cost', effect: null,
-    desc: '💀棄 3 張手牌。從技能牌庫搜尋任意 3 張加入手牌。' },
-  { id: 'eigenvalue', name: '特徵值定理', cat: 'linalg', timing: 'persistent', effect: null,
-    desc: '🔁下一次算式傷害 +25；含 ^ 則 +40。' },
-  { id: 'rank_nullity', name: '秩-零化度定理', cat: 'linalg', timing: 'main', effect: null,
-    desc: '查看技能牌庫頂 5 張，任意張入墓地，其餘洗回。' },
+  { id: 'determinant', name: '行列式定理', cat: 'linalg', timing: 'main', effect: 'determinant',
+    desc: '取手牌 2 張數字卡(a,b)與數字墓地 2 張(c,d)，|ad-bc| 作為傷害（上限 100）。' },
+  { id: 'cramer', name: '克拉瑪公式', cat: 'linalg', timing: 'cost', effect: 'cramer',
+    desc: '💀棄 3 張手牌。自技能牌庫頂取 3 張加入手牌（矩陣空間下取 4 張）。' },
+  { id: 'eigenvalue', name: '特徵值定理', cat: 'linalg', timing: 'persistent', effect: 'eigenvalue',
+    desc: '🔁下一次算式攻擊傷害 +25；含 ^ 則 +40（矩陣空間下提升為 +40／+55）。' },
+  { id: 'rank_nullity', name: '秩-零化度定理', cat: 'linalg', timing: 'main', effect: 'rank_nullity',
+    desc: '重新洗牌你的技能牌庫（整理檢視的簡化實作）。' },
 
   // ── 幾何・拓撲類 ──
   { id: 'pythagoras', name: '畢達哥拉斯定理', cat: 'geometry', timing: 'main', effect: 'pythagoras',
@@ -98,14 +98,14 @@ export const FORMULAS = [
     desc: '對手取數字牌庫頂 3 張，你選 1 張，其餘送回牌庫底。' },
 
   // ── 複數・抽象代數類 ──
-  { id: 'euler_formula', name: '歐拉公式', cat: 'complex', timing: 'main', effect: null,
-    desc: '複數平面下免費；否則扣 25HP。打出 e、i、π 各一，造成 100 點穿透傷害。' },
-  { id: 'de_moivre', name: '棣美弗定理', cat: 'complex', timing: 'main', effect: null,
-    desc: '複數場地下，三角函數傷害額外 +n×8（n 為本回合 ^ 指數，上限 +40）。' },
+  { id: 'euler_formula', name: '歐拉公式', cat: 'complex', timing: 'main', effect: 'euler_formula',
+    desc: '打出手牌中 e、i、π 各一張，造成 100 點穿透傷害；複數平面下免費，否則扣自身 25HP。使用後本回合可再戰一次。' },
+  { id: 'de_moivre', name: '棣美弗定理', cat: 'complex', timing: 'main', effect: 'de_moivre',
+    desc: '本回合於複數平面下、含三角函數的算式攻擊額外 +32 傷害（n×8 的簡化實作）。' },
   { id: 'group_theory', name: '群論基本定理', cat: 'complex', timing: 'main', effect: null,
     desc: '宣告 n；傷害可整除 n 則 +n×4，否則向下調整為最近 n 的倍數。' },
-  { id: 'galois', name: '伽羅瓦理論', cat: 'complex', timing: 'cost', effect: null,
-    desc: '💀棄所有手牌。從技能牌庫任抽 6 張加入手牌。' },
+  { id: 'galois', name: '伽羅瓦理論', cat: 'complex', timing: 'cost', effect: 'galois',
+    desc: '💀棄掉所有手牌。從技能牌庫頂抽 6 張加入手牌。' },
 
   // ── 物理・應用數學類 ──
   { id: 'schrodinger', name: '薛丁格方程式', cat: 'physics', timing: 'instant', effect: null,
@@ -120,16 +120,16 @@ export const FORMULAS = [
     desc: '雙方各秘選一數字卡同開；較大方造成(差值)×5，較小方抽 2 張。' },
 
   // ── 離散數學類 ──
-  { id: 'fibonacci', name: '費波那契數列', cat: 'discrete', timing: 'persistent', effect: null,
-    desc: '🔁3 回合。傷害依序 +5/+5/+10。' },
-  { id: 'handshake', name: '圖論握手定理', cat: 'discrete', timing: 'main', effect: null,
-    desc: '選偶數張牌，每兩張選 1 張加入本回合算式（不佔槽位）。' },
+  { id: 'fibonacci', name: '費波那契數列', cat: 'discrete', timing: 'persistent', effect: 'fibonacci',
+    desc: '🔁3 回合。你的傷害依序 +5/+5/+10（黃金比例空間下加速為 +5/+10/+15）。' },
+  { id: 'handshake', name: '圖論握手定理', cat: 'discrete', timing: 'main', effect: 'handshake',
+    desc: '選偶數張(2 或 4)數字卡，每兩張取較大者加總作為傷害（上限 100）。' },
   { id: 'tsp', name: '旅行商問題', cat: 'discrete', timing: 'cost', effect: null,
     desc: '💀系統於數字墓地生成路徑；改善則 ÷2 作為傷害，逾時 ÷3（上限 100）。' },
   { id: 'basel', name: '巴塞爾問題', cat: 'discrete', timing: 'main', effect: 'basel',
     desc: '造成固定 50 點傷害，從技能牌庫抽 1 張。' },
-  { id: 'cantor', name: '康托爾對角論證', cat: 'discrete', timing: 'instant', effect: null,
-    desc: '⚡對手使用抽牌效果時取消其抽牌，你改抽 2 張技能。' },
+  { id: 'cantor', name: '康托爾對角論證', cat: 'discrete', timing: 'instant', effect: 'cantor',
+    desc: '⚡待命：取消對手下個回合的抽牌階段，你改抽 2 張技能。' },
 
   // ── 防禦干擾類 ──
   { id: 'def_deconstruct', name: '算式解構', cat: 'def-disrupt', timing: 'instant', effect: 'def_deconstruct',

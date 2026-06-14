@@ -290,6 +290,109 @@ export const EFFECTS = {
     return { ok: true };
   },
 
+  // ───── 歐拉・希爾伯特：公式 ─────
+  euler_formula(game, slot) {
+    const find = (cid) => game.players[slot].hand.find((c) => c.cardId === cid);
+    const e = find('const_e'), i = find('const_i'), pi = find('const_pi');
+    if (!e || !i || !pi) return { ok: false, error: '需手牌中有 e、i、π 各一張' };
+    game.consumeCards(slot, [e.uid, i.uid, pi.uid]);
+    if (!(game.field && game.field.cardId === 'complex_plane')) game.players[slot].hp = Math.max(0, game.players[slot].hp - 25);
+    game.dealDamage(slot, 100, { piercing: true });
+    game.battledThisTurn = false; // 本回合可再進行一次普通戰鬥
+    game.addLog(`${slot} 歐拉公式：造成 100 點穿透傷害（本回合可再戰一次）`);
+    return { ok: true };
+  },
+  handshake(game, slot, payload = {}) {
+    const cards = handVals(game, slot, payload.uids).filter((c) => c.type === 'number' || c.type === 'angle');
+    if (cards.length !== 2 && cards.length !== 4) return { ok: false, error: '需選擇 2 或 4 張數字卡' };
+    let dmg = 0; for (let i = 0; i < cards.length; i += 2) dmg += Math.max(cards[i].v, cards[i + 1].v);
+    game.consumeCards(slot, cards.map((c) => c.uid));
+    const res = game.dealModified(slot, Math.min(100, Math.round(dmg)), {}, { isAttack: false });
+    game.addLog(`${slot} 圖論握手定理：造成 ${res.actualDamage} 傷害`);
+    return { ok: true };
+  },
+  fourier(game, slot) {
+    game.players[slot].flags.fourier = 2;
+    game.addLog(`${slot} 傅立葉變換：2 回合內含 sin/cos 的算式攻擊 +20`);
+    return { ok: true };
+  },
+  de_moivre(game, slot) {
+    game.players[slot].flags.deMoivre = true;
+    game.addLog(`${slot} 棣美弗定理：本回合複數平面下三角算式 +32`);
+    return { ok: true };
+  },
+  fibonacci(game, slot) {
+    game.players[slot].flags.fibonacci = { turnsLeft: 3, step: 0 };
+    game.addLog(`${slot} 費波那契數列：未來 3 回合傷害依序加成`);
+    return { ok: true };
+  },
+  rank_nullity(game, slot) {
+    const d = game.players[slot].skillDeck;
+    for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
+    game.addLog(`${slot} 秩-零化度定理：重新整理技能牌庫`);
+    return { ok: true };
+  },
+  cantor(game, slot) {
+    game.players[slot].flags.cantorArmed = true;
+    game.addLog(`${slot} 康托爾對角論證：待命中（取消對手下次抽牌，你改抽 2 張技能）`);
+    return { ok: true };
+  },
+  eigenvalue(game, slot) {
+    game.players[slot].flags.eigenvalue = true;
+    game.addLog(`${slot} 特徵值定理：下一次算式攻擊獲得加成`);
+    return { ok: true };
+  },
+  determinant(game, slot, payload = {}) {
+    const hv = handVals(game, slot, payload.uids).filter((c) => c.type === 'number' || c.type === 'angle');
+    const gv = graveVals(game, slot, payload.graveUids, 'numberGrave').filter((c) => c.type === 'number' || c.type === 'angle');
+    if (hv.length < 2 || gv.length < 2) return { ok: false, error: '需手牌 2 張數字卡與數字墓地 2 張' };
+    const [a, b] = hv, [c, d] = gv;
+    const dmg = Math.min(100, Math.abs(a.v * d.v - b.v * c.v));
+    game.consumeCards(slot, [a.uid, b.uid]);
+    const res = game.dealModified(slot, dmg, {}, { isAttack: false });
+    game.addLog(`${slot} 行列式定理：|ad-bc|，造成 ${res.actualDamage} 傷害`);
+    return { ok: true };
+  },
+  cramer(game, slot, payload = {}) {
+    const p = game.players[slot];
+    const discard = (payload.discardUids || []).slice(0, 3);
+    if (discard.length < 3) return { ok: false, error: '需棄置 3 張手牌作為代價' };
+    for (const uid of discard) { const c = game.takeFromHand(slot, uid); if (c) game.toGrave(slot, c); }
+    const take = (game.field && game.field.cardId === 'matrix_space') ? 4 : 3;
+    let got = 0; for (let i = 0; i < take && p.skillDeck.length; i++) { p.hand.push(p.skillDeck.pop()); got++; }
+    game.enforceHandLimit(slot);
+    game.addLog(`${slot} 克拉瑪公式：棄 3 張、取得 ${got} 張技能卡`);
+    return { ok: true };
+  },
+  galois(game, slot) {
+    const p = game.players[slot];
+    const all = [...p.hand];
+    for (const c of all) { game.takeFromHand(slot, c.uid); game.toGrave(slot, c); }
+    game.drawSkills(slot, 6);
+    game.addLog(`${slot} 伽羅瓦理論：棄掉全部手牌，抽 6 張技能`);
+    return { ok: true };
+  },
+
+  // ───── 歐拉・希爾伯特：簽名卡 ─────
+  sig_euler_tour(game, slot, payload = {}) {
+    const p = game.players[slot];
+    const discard = (payload.discardUids || []).slice(0, 2);
+    if (discard.length < 2) return { ok: false, error: '需棄置 2 張手牌作為代價' };
+    for (const uid of discard) { const c = game.takeFromHand(slot, uid); if (c) game.toGrave(slot, c); }
+    let got = 0; for (let i = 0; i < 3 && p.skillDeck.length; i++) { p.hand.push(p.skillDeck.pop()); got++; }
+    game.drawNumbers(slot, 2);
+    game.enforceHandLimit(slot);
+    game.formulaBonusThisTurn = (game.formulaBonusThisTurn || 0) + 1;
+    game.addLog(`${slot} 遍歷引理：棄 2 張、取得 ${got} 張技能並抽 2 張數字，本回合公式使用上限 +1`);
+    return { ok: true };
+  },
+  sig_consistency(game, slot) {
+    game.players[slot].flags.consistencyBonus = true;
+    game.burnSkillDeck(game.opponentOf(slot), 8);
+    game.addLog(`${slot} 無矛盾性：本回合下次算式攻擊 +30，對手技能牌庫焚燒 8 張`);
+    return { ok: true };
+  },
+
   // ───── 歐幾里得簽名卡 ─────
   sig_fifth_postulate(game, slot) {
     game.players[slot].flags.fifthPostulate = { turnsLeft: 3 };
