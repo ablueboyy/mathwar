@@ -160,16 +160,24 @@ export const EFFECTS = {
     game.addLog(`${slot} 四色定理：未來 4 回合傷害依序 +5/+10/+15/+20`);
     return { ok: true };
   },
-  cauchy_schwarz(game, slot) {
-    game.players[slot].flags.cauchyArmed = true;
-    game.addLog(`${slot} 柯西-施瓦茨不等式：待命中（對手下次算式攻擊傷害降為 60%）`);
+  cauchy_schwarz(game, slot, payload = {}) {
+    const cards = handVals(game, slot, payload.uids).filter((c) => c.type === 'number' || c.type === 'angle');
+    if (cards.length < 2) return { ok: false, error: '需選擇手牌中 2 張數字卡（a₁, a₂）作為向量分量' };
+    const [a1, a2] = cards;
+    const v = Math.floor(Math.sqrt(a1.v ** 2 + a2.v ** 2));
+    const reduction = v * 3;
+    game.consumeCards(slot, [a1.uid, a2.uid]);
+    game.players[slot].flags.cauchyReduction = reduction;
+    let extra = '';
+    if (v >= 10) { game.drawSkills(slot, 1); extra = '，模長 ≥ 10，額外抽 1 張技能'; }
+    game.addLog(`${slot} 柯西-施瓦茨：⌊√(${a1.v}²+${a2.v}²)⌋=${v}，對手下次算式傷害 −${reduction}${extra}`);
     return { ok: true };
   },
 
   // ───── 阿基米德：分析・統計公式 ─────
   ftc(game, slot) {
-    game.players[slot].flags.ftcBonus = true;
-    game.addLog(`${slot} 積分基本定理：本回合攻擊傷害 +40`);
+    game.players[slot].flags.ftcTurns = 3;
+    game.addLog(`${slot} 積分基本定理：3 回合內算式攻擊傷害 +⌊防禦值×25%⌋（上限 +25）`);
     return { ok: true };
   },
   rolle(game, slot) {
@@ -216,7 +224,7 @@ export const EFFECTS = {
   // ───── 牛頓・高斯：代數／數論公式 ─────
   binomial(game, slot) {
     game.players[slot].flags.binomial = 2;
-    game.addLog(`${slot} 二項式定理：2 回合內含 ^ 的算式攻擊 +30 傷害`);
+    game.addLog(`${slot} 二項式定理：2 回合內含 ^ 的算式成功攻擊後，以指數 n 自動計算 C(n,⌊n/2⌋) 作為額外傷害（上限 +60，不受 cap 限制）`);
     return { ok: true };
   },
   fermat_little(game, slot, payload = {}) {

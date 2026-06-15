@@ -97,6 +97,9 @@ export function registerSocketEvents(io) {
       (game, slot, p) => { const cs = (p.uids || []).map((u) => cardOf(game, slot, u)).filter(Boolean); return { kind: 'attack', expr: cs.map((c) => c.glyph).join(' ') }; },
     ));
     socket.on('end_turn', withGame((game, slot) => game.endTurn(slot)));
+    socket.on('draw_skill', withGame(
+      (game, slot, p) => game.drawSkillChoice(slot, p.deckType || 'formula'),
+    ));
 
     // 算式預覽（不改變狀態）
     socket.on('attack_preview', ({ uids }) => {

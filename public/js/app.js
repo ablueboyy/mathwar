@@ -229,11 +229,14 @@ function render(st) {
   $('opp-hp-fill').style.width = hpPercent(st.opponent.hp) + '%';
   $('opp-hp-text').textContent = `${st.opponent.hp}/500`;
   $('opp-numdeck').textContent = st.opponent.numberDeckCount;
-  $('opp-skilldeck').textContent = st.opponent.skillDeckCount;
+  $('opp-opdeck').textContent = st.opponent.operatorDeckCount;
+  $('opp-fmldeck').textContent = st.opponent.formulaDeckCount;
   $('opp-numgrave').textContent = st.opponent.numberGrave.length;
-  $('opp-skillgrave').textContent = st.opponent.skillGrave.length;
   $('opp-hand').textContent = st.opponent.handCount;
   $('opp-defval').textContent = st.opponent.defense.value;
+  const oppDurability = st.opponent.defense.durability;
+  const oppDefVal = st.opponent.defense.value;
+  $('opp-dur').textContent = oppDefVal > 0 ? `耐久 ${oppDurability}/${oppDefVal}` : '';
   const oppDef = $('opp-defense'); oppDef.innerHTML = '';
   st.opponent.defense.cards.forEach((c) => oppDef.appendChild(cardEl(c, null)));
   // 對手正在佈置的防禦牌（未公開，以牌背呈現）
@@ -252,10 +255,18 @@ function render(st) {
   $('my-hp-fill').style.width = hpPercent(st.you.hp) + '%';
   $('my-hp-text').textContent = `${st.you.hp}/500`;
   $('my-numdeck').textContent = st.you.numberDeckCount;
-  $('my-skilldeck').textContent = st.you.skillDeckCount;
+  $('my-opdeck').textContent = st.you.operatorDeckCount;
+  $('my-fmldeck').textContent = st.you.formulaDeckCount;
   $('my-numgrave').textContent = st.you.numberGrave.length;
   $('my-skillgrave').textContent = st.you.skillGrave.length;
   $('my-defval').textContent = st.you.defense.value;
+  const myDurability = st.you.defense.durability;
+  const myDefVal = st.you.defense.value;
+  $('my-dur').textContent = myDefVal > 0 ? `耐久 ${myDurability}/${myDefVal}` : '';
+  // 技能抽牌按鈕：僅在我方回合且本回合尚未抽過技能時顯示
+  const canDrawSkill = myTurn && !st.you.skillDrawDone;
+  $('btn-draw-op').classList.toggle('hidden', !canDrawSkill);
+  $('btn-draw-fml').classList.toggle('hidden', !canDrawSkill);
 
   // 我方防禦區：已佈置的牌 + 草稿（pending）
   const myDef = $('my-defense'); myDef.innerHTML = '';
@@ -448,6 +459,14 @@ $('btn-set-def').onclick = () => {
   attackSel = []; defenseSel = []; emitDraft();
 };
 $('btn-clear').onclick = () => { attackSel = []; defenseSel = []; emitDraft(); render(lastState); };
+$('btn-draw-op').onclick = () => {
+  if (!isMyTurn()) return toast('尚未輪到你');
+  socket.emit('draw_skill', { deckType: 'operator' });
+};
+$('btn-draw-fml').onclick = () => {
+  if (!isMyTurn()) return toast('尚未輪到你');
+  socket.emit('draw_skill', { deckType: 'formula' });
+};
 $('btn-endturn').onclick = () => { if (!isMyTurn()) return toast('尚未輪到你'); socket.emit('end_turn', {}); };
 
 loadCharacters();

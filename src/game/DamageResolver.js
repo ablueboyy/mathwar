@@ -1,4 +1,4 @@
-// 傷害結算：套用傷害上限、扣除對手防禦值、處理穿透傷害
+// 傷害結算：套用傷害上限、扣除對手防禦值（含耐久）、處理穿透傷害
 // 回傳 { rawDamage, capped, defenseAbsorbed, actualDamage }
 export function resolveDamage(rawDamage, attacker, defender, opts = {}) {
   const cap = opts.damageCap ?? attacker.flags?.damageCapOverride ?? 100;
@@ -19,6 +19,10 @@ export function resolveDamage(rawDamage, attacker, defender, opts = {}) {
   if (defender.flags?.defenseCapThisTurn != null) {
     defValue = Math.min(defValue, defender.flags.defenseCapThisTurn);
   }
+  // 消耗制：有效防禦 = min(防禦值, 當前耐久)
+  const durability = defender.defense.durability ?? defValue;
+  defValue = Math.min(defValue, durability);
+
   const actualDamage = Math.max(0, capped - defValue);
   return { rawDamage, capped, defenseAbsorbed: capped - actualDamage, actualDamage, piercing: false };
 }

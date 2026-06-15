@@ -37,9 +37,9 @@
       </div>
       <div class="meta-row">
         <span>數字牌庫 <b id="opp-numdeck">0</b></span>
-        <span>技能牌庫 <b id="opp-skilldeck">0</b></span>
+        <span>運算子庫 <b id="opp-opdeck">0</b></span>
+        <span>公式庫 <b id="opp-fmldeck">0</b></span>
         <span>數字墓地 <b id="opp-numgrave">0</b></span>
-        <span>技能墓地 <b id="opp-skillgrave">0</b></span>
         <span>手牌 <b id="opp-hand">0</b></span>
       </div>
     </div>
@@ -48,7 +48,7 @@
     <div class="defense-zone opp-zone">
       <span class="zone-label">🔴 對手防禦區</span>
       <div id="opp-defense" class="card-row"></div>
-      <span class="def-value">🛡️ <b id="opp-defval">0</b></span>
+      <span class="def-value">🛡️ <b id="opp-defval">0</b> <span id="opp-dur" class="def-dur"></span></span>
     </div>
 
     <!-- 中央：場地 + 算式工作區 -->
@@ -75,7 +75,7 @@
     <div class="defense-zone my-zone drop-target" id="my-defense-drop">
       <span class="zone-label">🟢 我方防禦區（拖曳手牌至此設防）</span>
       <div id="my-defense" class="card-row"></div>
-      <span class="def-value">🛡️ <b id="my-defval">0</b></span>
+      <span class="def-value">🛡️ <b id="my-defval">0</b> <span id="my-dur" class="def-dur"></span></span>
     </div>
 
     <!-- 我方資訊 -->
@@ -87,7 +87,8 @@
       </div>
       <div class="meta-row">
         <span>數字牌庫 <b id="my-numdeck">0</b></span>
-        <span>技能牌庫 <b id="my-skilldeck">0</b></span>
+        <span>運算子庫 <b id="my-opdeck">0</b></span>
+        <span>公式庫 <b id="my-fmldeck">0</b></span>
         <span>數字墓地 <b id="my-numgrave">0</b></span>
         <span>技能墓地 <b id="my-skillgrave">0</b></span>
       </div>
@@ -101,6 +102,8 @@
 
     <!-- 控制 -->
     <div class="controls">
+      <button id="btn-draw-op" class="accent2 hidden">抽運算子卡</button>
+      <button id="btn-draw-fml" class="accent2 hidden">抽公式/場地卡</button>
       <button id="btn-endturn">結束回合</button>
     </div>
 

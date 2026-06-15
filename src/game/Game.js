@@ -18,6 +18,13 @@ function isFibNum(n) {
   const isPS = (x) => { const s = Math.round(Math.sqrt(x)); return s * s === x; };
   return isPS(5 * n * n + 4) || isPS(5 * n * n - 4);
 }
+function _comb(n, k) {
+  if (k < 0 || k > n) return 0;
+  k = Math.min(k, n - k);
+  let r = 1;
+  for (let i = 0; i < k; i++) r = (r * (n - i)) / (i + 1);
+  return Math.round(r);
+}
 
 export class Game extends GameState {
   constructor(roomId, p1Char, p2Char, firstPlayer) {
@@ -36,8 +43,7 @@ export class Game extends GameState {
     const matrixField = this.field && this.field.cardId === 'matrix_space';
     if (p.flags.fourColor) bonus += [5, 10, 15, 20][Math.min(p.flags.fourColor.step, 3)];
     if (p.flags.eigenvalue) bonus += ctx.usedPow ? (matrixField ? 55 : 40) : (matrixField ? 40 : 25);
-    if (p.flags.ftcBonus) bonus += 40;
-    if (p.flags.binomial && ctx.usedPow) bonus += 30;
+    if (p.flags.ftcTurns > 0) bonus += Math.min(25, Math.floor(p.defense.value * 0.25));
     if (p.flags.fourier && ctx.usedTrig) bonus += 20;
     if (p.flags.deMoivre && ctx.usedTrig && this.field && this.field.cardId === 'complex_plane') bonus += 32;
     if (p.flags.fibonacci) bonus += (this.field && this.field.cardId === 'golden_ratio' ? [5, 10, 15] : [5, 5, 10])[Math.min(p.flags.fibonacci.step, 2)];
@@ -86,10 +92,11 @@ export class Game extends GameState {
         return { rawDamage: raw, capped: 0, defenseAbsorbed: 0, actualDamage: 0, cancelled: true };
       }
       // 柯西-施瓦茨：傷害降為 60%
-      if (def.flags.cauchyArmed) {
-        def.flags.cauchyArmed = false;
-        raw = Math.floor(raw * 0.6);
-        this.addLog(`${opp} 柯西-施瓦茨不等式：將 ${slot} 的算式傷害壓低至 60%`);
+      if (def.flags.cauchyReduction != null) {
+        const reduction = def.flags.cauchyReduction;
+        delete def.flags.cauchyReduction;
+        raw = Math.max(0, raw - reduction);
+        this.addLog(`${opp} 柯西-施瓦茨：本次傷害減少 ${reduction} 點（剩餘 ${raw}）`);
       }
       // 中國剩餘定理：傷害分別對 2、3、5 取模後相加
       if (def.flags.crtArmed) {
@@ -100,6 +107,10 @@ export class Game extends GameState {
       }
     }
     const res = resolveDamage(raw, att, def, opts);
+    // 消耗制防禦：每次吸收傷害後扣減耐久值
+    if (res.defenseAbsorbed > 0 && def.defense.durability != null) {
+      def.defense.durability = Math.max(0, def.defense.durability - res.defenseAbsorbed);
+    }
     this.applyDamage(opp, res.actualDamage);
     this.recordDamage(slot, res.capped);
     // 防守反擊：傷害被完全吸收時觸發
@@ -146,7 +157,7 @@ export class Game extends GameState {
 
     // 清除「本回合」進攻旗標（屬於即將行動的玩家，避免延續到下一回合）
     const p = this.players[slot];
-    delete p.flags.limitDef; delete p.flags.ftcBonus; delete p.flags.lhopital; delete p.flags.rolleArmed;
+    delete p.flags.limitDef; delete p.flags.lhopital; delete p.flags.rolleArmed;
     delete p.flags.prism; delete p.flags.principia; delete p.flags.perfectNumber;
     delete p.flags.deMoivre; delete p.flags.consistencyBonus;
 
@@ -156,6 +167,7 @@ export class Game extends GameState {
     if (p.flags.fifthPostulate) { p.flags.fifthPostulate.turnsLeft--; if (p.flags.fifthPostulate.turnsLeft <= 0) delete p.flags.fifthPostulate; }
     if (p.flags.fourColor && !isFirst) { p.flags.fourColor.turnsLeft--; p.flags.fourColor.step++; if (p.flags.fourColor.turnsLeft <= 0) delete p.flags.fourColor; }
     if (p.flags.binomial > 0) { p.flags.binomial--; }
+    if (p.flags.ftcTurns > 0) { p.flags.ftcTurns--; if (!p.flags.ftcTurns) delete p.flags.ftcTurns; }
     if (p.flags.eulerTheorem > 0) { p.flags.eulerTheorem--; }
     if (p.flags.fourier > 0) { p.flags.fourier--; }
     if (p.flags.fibonacci && !isFirst) { p.flags.fibonacci.turnsLeft--; p.flags.fibonacci.step++; if (p.flags.fibonacci.turnsLeft <= 0) delete p.flags.fibonacci; }
@@ -163,11 +175,14 @@ export class Game extends GameState {
     // 場地被動：非歐幾里得空間 → 每回合開始抽 1 張技能
     if (this.field && this.field.cardId === 'non_euclidean' && !isFirst) this.drawSkills(slot, 1);
 
+    // 重置技能抽牌選擇旗標
+    p.skillDrawDone = false;
+
     // 跳過戰鬥旗標
     if (p.flags.skipBattle) { this.battledThisTurn = true; p.flags.skipBattle = false; this.addLog(`${slot} 本回合跳過戰鬥階段`); }
 
-    // 抽牌（牌庫空則於 drawForTurn 內判敗）
-    if (!isFirst) this.drawForTurn(slot, 2, 1);
+    // 抽牌：自動抽 2 張數字，技能抽牌由玩家透過按鈕選擇
+    if (!isFirst) this.drawForTurn(slot, 2);
   }
 
   endTurn(slot) {
@@ -233,6 +248,23 @@ export class Game extends GameState {
     const res = this.dealModified(slot, value, { usedPow, usedTrig, isExpression: true }, opts);
     this.battledThisTurn = true;
     this.addLog(`${slot} 算式攻擊：算式傷害 ${res.capped}，對手防禦吸收 ${res.defenseAbsorbed}，實際傷害 ${res.actualDamage}` + (notes.length ? `（${notes.join('、')}）` : ''));
+
+    // 二項式定理：含 ^ 時，以指數 n 計算 C(n,⌊n/2⌋) 作為額外不受 cap 限制的傷害
+    if (p.flags.binomial > 0 && usedPow && res.actualDamage > 0) {
+      const powIdx = cards.findIndex((c) => c.cardId === 'pow');
+      if (powIdx !== -1) {
+        const expCard = cards.slice(powIdx + 1).find((c) => c.type === 'number' || c.type === 'angle');
+        if (expCard && expCard.v >= 1) {
+          const n = Math.floor(expCard.v);
+          const k = Math.floor(n / 2);
+          const bonus = Math.min(60, _comb(n, k));
+          if (bonus > 0) {
+            this.applyDamage(this.opponentOf(slot), bonus);
+            this.addLog(`${slot} 二項式定理：C(${n},${k})=${bonus} 額外傷害（不受 cap 限制）`);
+          }
+        }
+      }
+    }
 
     // 羅爾定理：本次傷害與對手上回合傷害相等 → 允許再戰一次
     if (p.flags.rolleArmed) {
